@@ -1,0 +1,20 @@
+function [ commandFormat ] = ZaberCom( name )
+%ZABERCOM returns value to send to zaber to perform certain command
+%   supported commands:
+%   home
+%   set microstep value
+%   move relative
+%   store position
+%   go to stored position
+
+if strcmp(name,'home')
+    commandFormat='/home';
+else if strcmp(name, 'microstepRes')
+    commandFormat='/1 37 64'
+        
+    end
+    
+    
+    
+end
+
