@@ -27,11 +27,11 @@ function varargout = HairMechGUI(varargin)
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
 gui_State = struct('gui_Name',       mfilename, ...
-                   'gui_Singleton',  gui_Singleton, ...
-                   'gui_OpeningFcn', @HairMechGUI_OpeningFcn, ...
-                   'gui_OutputFcn',  @HairMechGUI_OutputFcn, ...
-                   'gui_LayoutFcn',  [] , ...
-                   'gui_Callback',   []);
+    'gui_Singleton',  gui_Singleton, ...
+    'gui_OpeningFcn', @HairMechGUI_OpeningFcn, ...
+    'gui_OutputFcn',  @HairMechGUI_OutputFcn, ...
+    'gui_LayoutFcn',  [] , ...
+    'gui_Callback',   []);
 if nargin && ischar(varargin{1})
     gui_State.gui_Callback = str2func(varargin{1});
 end
@@ -42,7 +42,7 @@ else
     gui_mainfcn(gui_State, varargin{:});
 end
 % End initialization code - DO NOT EDIT
-
+end
 
 % --- Executes just before HairMechGUI is made visible.
 function HairMechGUI_OpeningFcn(hObject, eventdata, handles, varargin)
@@ -60,10 +60,10 @@ guidata(hObject, handles);
 
 % UIWAIT makes HairMechGUI wait for user response (see UIRESUME)
 % uiwait(handles.figure1);
-
+end
 
 % --- Outputs from this function are returned to the command line.
-function varargout = HairMechGUI_OutputFcn(hObject, eventdata, handles) 
+function varargout = HairMechGUI_OutputFcn(hObject, eventdata, handles)
 % varargout  cell array for returning output args (see VARARGOUT);
 % hObject    handle to figure
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -71,7 +71,7 @@ function varargout = HairMechGUI_OutputFcn(hObject, eventdata, handles)
 
 % Get default command line output from handles structure
 varargout{1} = handles.output;
-
+end
 
 % --- Executes on button press in ZaberInit.
 function ZaberInit_Callback(hObject, eventdata, handles)
@@ -80,25 +80,27 @@ function ZaberInit_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % open serial port
-zaber=serial('COM5');
-hObject.UserData=zaber;
-fopen(zaber);
-
-% make sure numbering is what we think it is
-numberResp=ZaberCom(zaber,'renumber',0);
-
-% set microstep value so we know what it is
-microstepResp=ZaberCom(zaber,'microstepRes',64);
-
-% send actuator to home position
-homeResp=ZaberCom(zaber,'home',0);
+% zaber=serial('COM5');
+% hObject.UserData=zaber;
+% fopen(zaber);
+%
+% % make sure numbering is what we think it is
+% numberResp=ZaberCom(zaber,'renumber',0);
+%
+% % set microstep value so we know what it is
+% microstepResp=ZaberCom(zaber,'microstepRes',64);
+%
+% % send actuator to home position
+% homeResp=ZaberCom(zaber,'home',0);
 
 % update status and next button
-if numberResp.command==2 && microstepResp.command==37 && homeResp.command==1
+if 1%numberResp.command==2 && microstepResp.command==37 && homeResp.command==1
     % init was good if we got here
-    set(get(handles.ZaberInitStatus,'String'),'Init Done.')
+    set(handles.ZaberInitStatus,'String','Init Done')
+    set(handles.LabJackInit,'Enable','on')
 end
 
+end
 
 % --- Executes on button press in LabJackInit.
 function LabJackInit_Callback(hObject, eventdata, handles)
@@ -109,12 +111,18 @@ function LabJackInit_Callback(hObject, eventdata, handles)
 % initialize LabJack
 
 % update status and next button
+set(handles.LabJackInitStatus,'String','Init Done')
+set(handles.Approach,'Enable','on')
+
+end
 
 % --- Executes on button press in Approach.
 function Approach_Callback(hObject, eventdata, handles)
 % hObject    handle to Approach (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+
+set(handles.ApproachStatus,'String','Approaching...')
 
 % while cantilever displacement is around zero
 % step down Zaber
@@ -123,18 +131,26 @@ function Approach_Callback(hObject, eventdata, handles)
 % store final position
 
 % update status and next button
+set(handles.ApproachStatus,'String','Approach Complete')
+set(handles.StartExperiment,'Enable','on')
+
+end
 
 % --- Executes on button press in StartExperiment.
 function StartExperiment_Callback(hObject, eventdata, handles)
 % hObject    handle to StartExperiment (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+set(handles.ExperimentStatus,'String','Running Experiment...')
 
 % for number of steps in experiment
 % move down a little bit
 % measure cantilever signal for a while
 
-% update status 
+% update status
+set(handles.ExperimentStatus,'String','Experiment Complete!')
+
+end
 
 % --- Executes when user attempts to close figure1.
 function figure1_CloseRequestFcn(hObject, eventdata, handles)
@@ -144,8 +160,9 @@ function figure1_CloseRequestFcn(hObject, eventdata, handles)
 
 % close serial port
 %fclose(zaber)
-disp(get(handles.ZaberInit,'UserData'))
+% disp(get(handles.ZaberInit,'UserData'))
 % stop LabJack
 
 % Hint: delete(hObject) closes the figure
 delete(hObject);
+end
