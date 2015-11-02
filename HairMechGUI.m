@@ -109,7 +109,7 @@ function LabJackInit_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % initialize LabJack
-
+ 
 % update status and next button
 set(handles.LabJackInitStatus,'String','Init Done')
 set(handles.Approach,'Enable','on')
