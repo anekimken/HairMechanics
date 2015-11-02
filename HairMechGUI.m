@@ -80,21 +80,21 @@ function ZaberInit_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % open serial port
-% zaber=serial('COM5');
-% hObject.UserData=zaber;
-% fopen(zaber);
-%
-% % make sure numbering is what we think it is
-% numberResp=ZaberCom(zaber,'renumber',0);
-%
-% % set microstep value so we know what it is
-% microstepResp=ZaberCom(zaber,'microstepRes',64);
-%
-% % send actuator to home position
-% homeResp=ZaberCom(zaber,'home',0);
+zaber=serial('COM5');
+hObject.UserData=zaber;
+fopen(zaber);
+
+% make sure numbering is what we think it is
+numberResp=ZaberCom(zaber,'renumber',0);
+
+% set microstep value so we know what it is
+microstepResp=ZaberCom(zaber,'microstepRes',64);
+
+% send actuator to home position
+homeResp=ZaberCom(zaber,'home',0);
 
 % update status and next button
-if 1%numberResp.command==2 && microstepResp.command==37 && homeResp.command==1
+if numberResp.command==2 && microstepResp.command==37 && homeResp.command==1
     % init was good if we got here
     set(handles.ZaberInitStatus,'String','Init Done')
     set(handles.LabJackInit,'Enable','on')
