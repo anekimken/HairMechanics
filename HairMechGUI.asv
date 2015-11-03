@@ -81,7 +81,7 @@ function ZaberInit_Callback(hObject, eventdata, handles)
 
 % open serial port
 zaber=serial('COM5');
-set(hObject,'UserData',zaber);
+hObject.UserData=zaber;
 fopen(zaber);
 
 % make sure numbering is what we think it is
@@ -100,9 +100,6 @@ if numberResp.command==2 && microstepResp.command==37 && homeResp.command==1
     set(handles.LabJackInit,'Enable','on')
     set(handles.ZaberInit,'Enable','off')
 end
-
-% Update handles structure
-guidata(gcf, handles);  
 
 end
 
@@ -164,11 +161,9 @@ function figure1_CloseRequestFcn(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % close serial port
-% get(handles.ZaberInit,'UserData')
 zaber=get(handles.ZaberInit,'UserData');
 fclose(zaber)
-delete(zaber)
-
+% disp(get(handles.ZaberInit,'UserData'))
 % stop LabJack
 
 % Hint: delete(hObject) closes the figure
