@@ -113,7 +113,16 @@ function LabJackInit_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % initialize LabJack
- 
+[ljudObj,ljhandle,chanType] = LabJackInit_PC(100,1);
+% data = NET.createArray('System.Double', 100);  %Max buffer size (#channels*numScansRequested) for reading both channels
+data=zeros(100,1);
+
+% TimeToStream=0.1;
+% DataRate=100;
+[RecordedData,index] = grabData(ljudObj,ljhandle,data);
+disp(RecordedData(1:index-1))
+set(handles.CantileverSignal,'String',['Cantilever Signal: ',num2str(mean(RecordedData))])
+
 % update status and next button
 set(handles.LabJackInitStatus,'String','Init Done')
 set(handles.Approach,'Enable','on')

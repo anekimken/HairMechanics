@@ -81,7 +81,7 @@ function ZaberInit_Callback(hObject, eventdata, handles)
 
 % open serial port
 zaber=serial('COM5');
-hObject.UserData=zaber;
+set(hObject,'UserData',zaber);
 fopen(zaber);
 
 % make sure numbering is what we think it is
@@ -101,6 +101,9 @@ if numberResp.command==2 && microstepResp.command==37 && homeResp.command==1
     set(handles.ZaberInit,'Enable','off')
 end
 
+% Update handles structure
+guidata(gcf, handles);  
+
 end
 
 % --- Executes on button press in LabJackInit.
@@ -110,7 +113,12 @@ function LabJackInit_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % initialize LabJack
- 
+[ljudObj,ljhandle,chanType] = LabJackInit_PC(100,1);
+data = NET.createArray('System.Double', 100);  %Max buffer size (#channels*numScansRequested) for reading both channels
+
+[RecordedData] = grabData(TimeToStream,DataRate,data);
+set(handles.LabJackInitStatus,'String','Init Done')
+
 % update status and next button
 set(handles.LabJackInitStatus,'String','Init Done')
 set(handles.Approach,'Enable','on')
@@ -161,9 +169,11 @@ function figure1_CloseRequestFcn(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % close serial port
+% get(handles.ZaberInit,'UserData')
 zaber=get(handles.ZaberInit,'UserData');
 fclose(zaber)
-% disp(get(handles.ZaberInit,'UserData'))
+delete(zaber)
+
 % stop LabJack
 
 % Hint: delete(hObject) closes the figure
