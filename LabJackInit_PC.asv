@@ -1,4 +1,4 @@
-function [ljudObj,ljhandle,chanType] = LabJackInit_PC(DataRate,NumberOfChannels)
+function [LabJack] = LabJackInit_PC(DataRate,NumberOfChannels)
 
 %LabJackInit for EasyLJStream
 %Based on example MATLAB code provided by LabJack
@@ -9,11 +9,11 @@ function [ljudObj,ljhandle,chanType] = LabJackInit_PC(DataRate,NumberOfChannels)
 %Adam Nekimken      22 July,  2015 2:00 pm     Added ability to add more channels
 
 
-% ljasm = NET.addAssembly('C:\Program Files\LabJack\Drivers\LJUDDotNet'); %Make the LabJack driver .NET assembly visible in MATLAB
+ljasm = NET.addAssembly('LJUDDotNet'); %Make the LabJack driver .NET assembly visible in MATLAB
 ljudObj = LabJack.LabJackUD.LJUD; %create UD object for LabJack
 
-% ioType = LabJack.LabJackUD.IO; %configure variable ioType to call LabJack.LabJackUD.IO in LJ driver
-% channel = LabJack.LabJackUD.CHANNEL; %configure variable channel to call LabJack.LabJackUD.CHANNEL in LJ driver
+ioType = LabJack.LabJackUD.IO; %configure variable ioType to call LabJack.LabJackUD.IO in LJ driver
+channel = LabJack.LabJackUD.CHANNEL; %configure variable channel to call LabJack.LabJackUD.CHANNEL in LJ driver
 
 
 %Initialize parameters
@@ -97,7 +97,7 @@ try
     
     
 catch err
-    showErrorMessage(err)
+%     showErrorMessage(err)
     rethrow(err)
     
 end

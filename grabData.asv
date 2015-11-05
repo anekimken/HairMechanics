@@ -1,37 +1,43 @@
-function [RecordedData] = grabData(ljudObj,ljhandle,DataStruct)
+function [RecordedData,index] = grabData(lj,DataStruct)
 try
+    ljudObj=lj.ljudObj;
+    ljhandle=lj.ljhandle;
+    chanType=lj.chanType;
+%     ljasm=LabJack.ljasm;
+    
     
     scansRequested = 10; %read data at 10 Hz
     
     
     %Start the stream.
-%     chanObj = System.Enum.ToObject(chanType, 1); %channel = 0
-    [ljerror, test] = ljudObj.eGet(ljhandle, LabJack.LabJackUD.IO.START_STREAM, 0, 0, 0);
+    chanObj = System.Enum.ToObject(chanType, 1); %channel = 0
+    [ljerror, test] = ljudObj.eGet(ljhandle, LabJack.LabJackUD.IO.START_STREAM, chanObj, 0, 0);
     
     RecordedData=zeros(10,1);
     index=1;
     tic
     while toc<=0.5
-        %             pause(0.1)
+        %                     pause(1)
         [ljerror, PacketLength] = ljudObj.eGet(ljhandle, LabJack.LabJackUD.IO.GET_STREAM_DATA, LabJack.LabJackUD.CHANNEL.ALL_CHANNELS, scansRequested, DataStruct);
         for  j= 1:PacketLength
-            NewData=DataStruct(
-            RecordedData(index+(j-1))=DataStruct;
+            %             NewData=DataStruct
+            RecordedData(index+(j-1))=DataStruct(j+1);
+
         end
         index=index+PacketLength;
     end
     
 catch err
     
-%     if strncmp(char(err.ExceptionObject.ToString()),'Stream scans overlapped',10)
-%         disp('Try a slower sampling rate or lower resolution. See https://labjack.com/support/datasheets/u6/operation/stream-mode for details.')
-%     else
-%         disp(ljerror)
-%     end
-%     closepreview
+    %     if strncmp(char(err.ExceptionObject.ToString()),'Stream scans overlapped',10)
+    %         disp('Try a slower sampling rate or lower resolution. See https://labjack.com/support/datasheets/u6/operation/stream-mode for details.')
+    %     else
+    %         disp(ljerror)
+    %     end
+    %     closepreview
     %Stop the stream to avoid memory leak
-%     chanObj = System.Enum.ToObject(chanType, 0); %channel = 0
-%     ljudObj.eGet(ljhandle, LabJack.LabJackUD.IO.STOP_STREAM, chanObj, 0, 0);
+    %     chanObj = System.Enum.ToObject(chanType, 0); %channel = 0
+    %     ljudObj.eGet(ljhandle, LabJack.LabJackUD.IO.STOP_STREAM, chanObj, 0, 0);
     
     rethrow(err)
 end

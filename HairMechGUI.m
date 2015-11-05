@@ -80,7 +80,7 @@ function ZaberInit_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % open serial port
-zaber=serial('COM5');
+zaber=serial('COM3');
 set(hObject,'UserData',zaber);
 fopen(zaber);
 
@@ -102,7 +102,7 @@ if numberResp.command==2 && microstepResp.command==37 && homeResp.command==1
 end
 
 % Update handles structure
-guidata(gcf, handles);  
+guidata(gcf, handles);
 
 end
 
@@ -113,20 +113,20 @@ function LabJackInit_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % initialize LabJack
-[ljudObj,ljhandle,chanType] = LabJackInit_PC(100,1);
-% data = NET.createArray('System.Double', 100);  %Max buffer size (#channels*numScansRequested) for reading both channels
-data=zeros(100,1);
+[lj] = LabJackInit_PC(1000,1);
 
-% TimeToStream=0.1;
-% DataRate=100;
-[RecordedData,index] = grabData(ljudObj,ljhandle,data);
-disp(RecordedData(1:index-1))
+% grab first bit of data
+[RecordedData,~] = grabData(lj,10);
 set(handles.CantileverSignal,'String',['Cantilever Signal: ',num2str(mean(RecordedData))])
 
 % update status and next button
 set(handles.LabJackInitStatus,'String','Init Done')
 set(handles.Approach,'Enable','on')
 set(handles.LabJackInit,'Enable','off')
+
+% save labjack object
+set(hObject,'UserData',lj);
+guidata(gcf, handles);
 
 end
 
@@ -137,12 +137,26 @@ function Approach_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 set(handles.ApproachStatus,'String','Approaching...')
+zaber=get(handles.ZaberInit,'UserData');
+lj=get(handles.LabJackInit,'UserData');
 
+Done=0;
 % while cantilever displacement is around zero
-% step down Zaber
+while Done==0
+        % step down Zaber
 
-% move up a little bit
-% store final position
+    [RecordedData,~] = grabData(lj,10);
+    pause(0.01)
+    set(handles.CantileverSignal,'String',['Cantilever Signal: ',num2str(mean(RecordedData))])
+    disp(mean(RecordedData))
+    if mean(RecordedData)>1
+        Done=1;
+    end
+
+end
+
+    % move up a little bit
+    % store final position
 
 % update status and next button
 set(handles.ApproachStatus,'String','Approach Complete')
@@ -167,19 +181,28 @@ set(handles.ExperimentStatus,'String','Experiment Complete!')
 end
 
 % --- Executes when user attempts to close figure1.
-function figure1_CloseRequestFcn(hObject, eventdata, handles)
+function figure1_CloseRequestFcn(hObject, eventdata, handles) %#ok<*INUSL,*DEFNU>
 % hObject    handle to figure1 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% close serial port
-% get(handles.ZaberInit,'UserData')
-zaber=get(handles.ZaberInit,'UserData');
-fclose(zaber)
-delete(zaber)
-
-% stop LabJack
-
-% Hint: delete(hObject) closes the figure
-delete(hObject);
+try
+    % close serial port
+    %     get(handles.ZaberInit,'UserData');
+    zaber=get(handles.ZaberInit,'UserData');
+    fclose(zaber);
+    delete(zaber);
+    
+    % stop LabJack
+    lj=get(handles.LabJackInit,'UserData'); %#ok<NASGU>
+    clear lj
+    
+    
+    % Hint: delete(hObject) closes the figure
+    delete(hObject);
+    
+catch err
+    
+    rethrow(err)
+end
 end

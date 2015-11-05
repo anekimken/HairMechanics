@@ -80,7 +80,7 @@ function ZaberInit_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % open serial port
-zaber=serial('COM5');
+zaber=serial('COM3');
 set(hObject,'UserData',zaber);
 fopen(zaber);
 
@@ -102,7 +102,7 @@ if numberResp.command==2 && microstepResp.command==37 && homeResp.command==1
 end
 
 % Update handles structure
-guidata(gcf, handles);  
+guidata(gcf, handles);
 
 end
 
@@ -113,16 +113,20 @@ function LabJackInit_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % initialize LabJack
-[ljudObj,ljhandle,chanType] = LabJackInit_PC(100,1);
-data = NET.createArray('System.Double', 100);  %Max buffer size (#channels*numScansRequested) for reading both channels
+[lj] = LabJackInit_PC(100,1);
 
-[RecordedData] = grabData(TimeToStream,DataRate,data);
-set(handles.LabJackInitStatus,'String','Init Done')
+% grab first bit of data
+[RecordedData,~] = grabData(lj,10);
+set(handles.CantileverSignal,'String',['Cantilever Signal: ',num2str(mean(RecordedData))])
 
 % update status and next button
 set(handles.LabJackInitStatus,'String','Init Done')
 set(handles.Approach,'Enable','on')
 set(handles.LabJackInit,'Enable','off')
+
+% save labjack object
+set(hObject,'UserData',lj);
+guidata(gcf, handles);
 
 end
 
@@ -163,19 +167,28 @@ set(handles.ExperimentStatus,'String','Experiment Complete!')
 end
 
 % --- Executes when user attempts to close figure1.
-function figure1_CloseRequestFcn(hObject, eventdata, handles)
+function figure1_CloseRequestFcn(hObject, eventdata, handles) %#ok<*INUSL,*DEFNU>
 % hObject    handle to figure1 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% close serial port
-% get(handles.ZaberInit,'UserData')
-zaber=get(handles.ZaberInit,'UserData');
-fclose(zaber)
-delete(zaber)
+try
+    % close serial port
+%     get(handles.ZaberInit,'UserData');
+    zaber=get(handles.ZaberInit,'UserData');
+    fclose(zaber);
+    delete(zaber);
+    
+    % stop LabJack
+    lj=get(handles.LabJackInit,'UserData');
+    clear lj
 
-% stop LabJack
-
-% Hint: delete(hObject) closes the figure
-delete(hObject);
+    
+    % Hint: delete(hObject) closes the figure
+    delete(hObject);
+    
+catch err
+    
+    rethrow(err)
+end
 end

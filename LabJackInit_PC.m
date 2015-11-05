@@ -1,4 +1,4 @@
-function [ljudObj,ljhandle,chanType] = LabJackInit_PC(DataRate,NumberOfChannels)
+function [lj] = LabJackInit_PC(DataRate,NumberOfChannels)
 
 %LabJackInit for EasyLJStream
 %Based on example MATLAB code provided by LabJack
@@ -9,11 +9,11 @@ function [ljudObj,ljhandle,chanType] = LabJackInit_PC(DataRate,NumberOfChannels)
 %Adam Nekimken      22 July,  2015 2:00 pm     Added ability to add more channels
 
 
-% ljasm = NET.addAssembly('C:\Program Files\LabJack\Drivers\LJUDDotNet'); %Make the LabJack driver .NET assembly visible in MATLAB
+ljasm = NET.addAssembly('LJUDDotNet'); %Make the LabJack driver .NET assembly visible in MATLAB
 ljudObj = LabJack.LabJackUD.LJUD; %create UD object for LabJack
 
-ioType = 1;%LabJack.LabJackUD.IO; %configure variable ioType to call LabJack.LabJackUD.IO in LJ driver
-channel = 0;%LabJack.LabJackUD.CHANNEL; %configure variable channel to call LabJack.LabJackUD.CHANNEL in LJ driver
+ioType = LabJack.LabJackUD.IO; %configure variable ioType to call LabJack.LabJackUD.IO in LJ driver
+channel = LabJack.LabJackUD.CHANNEL; %configure variable channel to call LabJack.LabJackUD.CHANNEL in LJ driver
 
 
 %Initialize parameters
@@ -31,7 +31,7 @@ disp(['UD Driver Version = ' num2str(ljudObj.GetDriverVersion())])
 try
     %Open and configure LabJack
     %Open the first found LabJack U6.
-    [ljerror, ljhandle] = ljudObj.OpenLabJack(LabJack.LabJackUD.DEVICE.U6, LabJack.LabJackUD.CONNECTION.USB, '0', true, 0);
+    [ljerror, ljhandle] = ljudObj.OpenLabJack(LabJack.LabJackUD.DEVICE.U6, LabJack.LabJackUD.CONNECTION.USB, '0', true, 0); %#ok<*ASGLU>
     
     %Configure the resolution of the analog inputs (pass a non-zero value for quick sampling).
     %See section 2.6 / 3.1 of LJ U6 user guide for more information.
@@ -64,7 +64,7 @@ try
     ljudObj.GoOne(ljhandle);
     
     %Get all the results just to check for errors.
-    [ljerror, ioType, channel, dblValue, dummyInt, dummyDbl] = ljudObj.GetFirstResult(ljhandle, ioType, channel, dblValue, dummyInt, dummyDouble);
+    [ljerror, ioType, channel, dblValue, dummyInt, dummyDbl] = ljudObj.GetFirstResult(ljhandle, ioType, channel, dblValue, dummyInt, dummyDouble); %#ok<*NASGU>
     finished = false;
     while finished == false
         try
@@ -86,14 +86,13 @@ try
     end
     
     %Used for casting a value to a CHANNEL enum
-    chanType = 0;%LabJack.LabJackUD.CHANNEL.LOCALID.GetType;
+    chanType = LabJack.LabJackUD.CHANNEL.LOCALID.GetType;
+
     
-    
-    
-    %The actual scan rate is dependent on how the desired scan rate divides into
-    %the LabJack clock.  The actual scan rate is returned in the value parameter
-    %from the start stream command.
-    disp(['Actual Scan Rate = ' num2str(dblValue)])
+    lj.ljudObj=ljudObj;
+    lj.ljhandle=ljhandle;
+    lj.chanType=chanType;
+    lj.ljasm=ljasm;
     
     
 catch err
