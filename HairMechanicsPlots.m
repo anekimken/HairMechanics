@@ -85,6 +85,11 @@ set(get(newY,'YLabel'),'Visible','off')
 load('HairLengths.mat');
 daterTots=dir('*_ProcessedData.mat');
 FreeLength=zeros(size(daterTots));
+base=zeros(size(daterTots));
+tip=zeros(size(daterTots));
+r=zeros(size(daterTots));
+Ia=zeros(size(daterTots));
+E=zeros(size(daterTots));
 kPoints=cell(size(daterTots));
 kAvg=zeros(size(daterTots));
 errorBarSize=zeros(size(daterTots));
@@ -96,21 +101,33 @@ for i=1:size(daterTots,1)
     load(daterTots(i).name);
     for j=1:size(HairLengths,1)
         if strcmp(daterTots(i).name,HairLengths{j,1})
-            FreeLength(i)=HairLengths{j,2};
+            FreeLength(i)=HairLengths{j,2}*1e-3;
+            base(i)=HairDiameters{i,2}*1e-6;
+            tip(i)=HairDiameters{i,3}*1e-6;
         end
     end
     kPoints{i}=stiffness;
     kAvg(i)=mean(kPoints{i});
     errorBarSize(i)=std(kPoints{i})/sqrt(size(kPoints{i},1));
+    r(i)=base(i)/tip(i);
+    Ia(i)=pi*(tip(i))^4/64;
+    E(i)=kAvg(i)*FreeLength(i)^3/(3*Ia(i)*r(i)^3);
+%     slope(i)=FreeLength(i)^3/(3*Ia(i)*r(i)^3);
     for k=1:size(kPoints{i},1)
-        fitData(index,1)=FreeLength(i);
+        fitData(index,1)=FreeLength(i)*1e3;
         fitData(index,2)=kPoints{i}(k);
+        fitData(index,3)=E(i);
         index=index+1;
     end
 end
 inverseCubic=fittype('a/(x)^3');
 options=fitoptions('Method','NonLinearLeastSquares');
 Lkfit=fit(fitData(:,1),fitData(:,2),inverseCubic,options);
+
+linFit=fittype('a*x+b');
+options=fitoptions('Method','NonLinearLeastSquares');
+Ekfit=fit(kAvg,E/1e9,linFit,options);
+
 
 %make plot
 figure('Units','inches',...
@@ -120,17 +137,24 @@ figure('Units','inches',...
 % errorbar(FreeLength,kAvg,errorBarSize,'kx')
 hold on
 for i=1:size(daterTots,1)
-    plot(FreeLength(i,1), kPoints{i,1},'ko','MarkerSize',5,'LineWidth',.75)
+    plot(FreeLength(i,1)*1e3, kPoints{i,1},'ko','MarkerSize',5,'LineWidth',.25)
+%     plot(E(i)/1e9, kPoints{i,1},'ko','MarkerSize',5,'LineWidth',.75)
+
 end
+%     plot( kAvg,E/1e9,'ko','MarkerSize',5,'LineWidth',.75)
 
 fitPlot=plot(Lkfit);
+% fitPlot=plot(Ekfit);
 legend off
 set(fitPlot,'LineWidth',2)
 
 ylimits=ylim;
 ylim('auto')%[0 ylimits(2)])
+% set(gca,'XScale','log')
+% xlim([1 1e3])
 xlimits=xlim;
 xlim([4 xlimits(2)])
+
 set(gca,'FontSize',12)
 % xlabel('Free Length of Hair (mm)')
 % ylabel('Stiffness of Hair (N/m)')
@@ -138,8 +162,19 @@ set(gca,'Box','off','Units','inches',...
 'ActivePositionProperty','Position',...
 'Position',plotSize)
 [newX,newY]=MiriamAxes(gca,'xy');
+% set(newX,'XScale','log')
 set(get(newX,'XLabel'),'Visible','off')
 set(get(newY,'YLabel'),'Visible','off')
+
+%% Curved Beam calculations
+for i=1:4
+    radii(i)=EfffectiveRadii{i,2}*1e-3; %#ok<*SAGROW>
+    theta(i)=FreeLength(i)/radii(i);
+    A(i)=theta(i)-sin(theta(i))*cos(theta(i));
+    B(i)=3*theta(i)-4*sin(theta(i))+sin(theta(i))*cos(theta(i));
+    Imid(i)=pi*(0.5*tip(i)+0.5*base(i))^4/64;
+    Ecurve(i)=kAvg(i)*radii(i)^3*(2*A(i)+3*B(i));
+end
 
 %% Save everything
 if strcmp(save,'Yes')
