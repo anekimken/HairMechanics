@@ -80,5 +80,5 @@ xlim(xlimits)
 legend off
 
 saveName=[FileName(1:end-4) '_ProcessedData.mat'];
-save(saveName,'stiffness','result1','sem1','data','sensitivity','CantileverStiffness')
+% save(saveName,'stiffness','result1','sem1','data','sensitivity','CantileverStiffness')
 

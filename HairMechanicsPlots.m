@@ -4,10 +4,12 @@
 
 close all
 clear all
-save='Yes' %#ok<NOPTS>
+savePlots='Yes' %#ok<NOPTS>
+compileData='No' %#ok<NOPTS>
 
-plotSize=[0.35 0.25 2.85 3.5/1.6-.5];
-plotPos=[0 2 3.5 3.5/1.6];
+plotSize=[0.35 0.25 2.35 3/1.6-.5];
+plotPos=[0 2 3 3/1.6];
+paperDimension=[3 3/1.6];
 
 % load one file for example plots
 FileName='ALN_Bend1.txt';
@@ -17,7 +19,7 @@ data=textscan(fileID,'%f %f %f','HeaderLines',9);
 
 [sensitivity]=SensitivityCalc('AN-HS9A',965,10.05,.0589); % in um/V
 
-CantileverStiffness=1.003;
+CantileverStiffness=1.003; % for AN-HS9A
 
 CantileverForce=data{3}.*sensitivity*CantileverStiffness;
 
@@ -26,9 +28,9 @@ smoothedDeflection=smooth(deflection,21);
 
 % example of deformation profile
 figure('Units','inches',...
-'Position',plotPos,...
-'PaperPositionMode','auto',...
-'PaperSize',[3.5 3.5/1.6])
+    'Position',plotPos,...
+    'PaperPositionMode','auto',...
+    'PaperSize',paperDimension)
 
 
 plot(0:0.001:size(smoothedDeflection,1)/1000-.001, smoothedDeflection*1e6,'k','LineWidth',1)
@@ -38,10 +40,10 @@ plot(0:0.001:size(smoothedDeflection,1)/1000-.001, smoothedDeflection*1e6,'k','L
 ylimits=ylim;
 % xlimits=xlim;
 ylim([0 ylimits(2)])
-set(gca,'FontSize',12)
+set(gca,'FontSize',10)
 set(gca,'Box','off','Units','inches',...
-'ActivePositionProperty','Position',...
-'Position',plotSize)
+    'ActivePositionProperty','Position',...
+    'Position',plotSize,'FontSize',10,'FontName','Arial')
 [newX,newY]=MiriamAxes(gca,'xy');
 set(get(newX,'XLabel'),'Visible','off')
 set(get(newY,'YLabel'),'Visible','off')
@@ -51,28 +53,28 @@ set(get(newY,'YLabel'),'Visible','off')
 
 %example of Force v deflection plot with best fit line
 figure('Units','inches',...
-'ActivePositionProperty','Position',...
-'Position',plotPos,...
-'PaperPositionMode','auto',...
-'PaperSize',[3.5 3.5/1.6])
+    'ActivePositionProperty','Position',...
+    'Position',plotPos,...
+    'PaperPositionMode','auto',...
+    'PaperSize',paperDimension)
 plot(deflection*1e6,CantileverForce*1e6,'k','DisplayName','Indentation Data','LineWidth',0.5)
 ylimits=ylim;
 xlimits=[0 60];
 hold all
 % title('Force vs. deflection','FontSize',24)
-set(gca,'FontSize',12)
+set(gca,'FontSize',10)
 
 Fdfit=fit(deflection*1e6,CantileverForce*1e6,'poly1');
-fitPlot=plot(Fdfit);
-set(fitPlot,'LineWidth',1)
+fitPlot=plot(Fdfit,'b');
+set(fitPlot,'LineWidth',1.25)
 % xlabel('Hair Deflection ($\mu$m)','Interpreter','latex','FontName','Helvetica')
 % ylabel('Applied Force ($\mu$N)','Interpreter','latex')
 ylim(ylimits)
 xlim([0 xlimits(2)])
 legend off
 set(gca,'Box','off','Units','inches',...
-'ActivePositionProperty','Position',...
-'Position',plotSize)
+    'ActivePositionProperty','Position',...
+    'Position',plotSize,'FontSize',10,'FontName','Arial')
 [newX,newY]=MiriamAxes(gca,'xy');
 set(get(newX,'XLabel'),'Visible','off')
 % set(newX,'Position',[0.18    0.11    0.775    0.0000000001]) % need to set same axes positions for all axes on all figures
@@ -112,14 +114,32 @@ for i=1:size(daterTots,1)
     r(i)=base(i)/tip(i);
     Ia(i)=pi*(tip(i))^4/64;
     E(i)=kAvg(i)*FreeLength(i)^3/(3*Ia(i)*r(i)^3);
-%     slope(i)=FreeLength(i)^3/(3*Ia(i)*r(i)^3);
+    %     slope(i)=FreeLength(i)^3/(3*Ia(i)*r(i)^3);
     for k=1:size(kPoints{i},1)
         fitData(index,1)=FreeLength(i)*1e3;
         fitData(index,2)=kPoints{i}(k);
         fitData(index,3)=E(i);
         index=index+1;
     end
+    
+    if strcmp(compileData,'Yes')
+        if exist('/Users/adam/Documents/MATLAB/HairSwipe/Paper/SubmittedData/ClassicalTouchAssayData.mat','file')
+            load('/Users/adam/Documents/MATLAB/HairSwipe/Paper/SubmittedData/ClassicalTouchAssayData.mat')
+        end
+        
+        CantileverForce=data{3}.*sensitivity*CantileverStiffness;
+        deflection=data{2}./1e6-data{3}.*sensitivity;
+        
+        HairMechanicsDataByHair(i).('Force')=CantileverForce;
+        HairMechanicsDataByHair(i).('Deflection')=deflection;
+        HairMechanicsDataByHair(i).('CalculatedStiffness')=stiffness;
+        HairMechanicsDataByHair(i).('Length')=FreeLength(i);
+    end
+    
+    
 end
+
+
 inverseCubic=fittype('a/(x)^3');
 options=fitoptions('Method','NonLinearLeastSquares');
 Lkfit=fit(fitData(:,1),fitData(:,2),inverseCubic,options);
@@ -131,22 +151,23 @@ Ekfit=fit(kAvg,E/1e9,linFit,options);
 
 %make plot
 figure('Units','inches',...
-'Position',plotPos,...
-'PaperPositionMode','auto',...
-'PaperSize',[3.5 3.5/1.6])
+    'Position',plotPos,...
+    'PaperPositionMode','auto',...
+    'PaperSize',paperDimension)
 % errorbar(FreeLength,kAvg,errorBarSize,'kx')
+set(gca,'FontSize',10,'FontName','Arial')
 hold on
 for i=1:size(daterTots,1)
     plot(FreeLength(i,1)*1e3, kPoints{i,1},'ko','MarkerSize',5,'LineWidth',.25)
-%     plot(E(i)/1e9, kPoints{i,1},'ko','MarkerSize',5,'LineWidth',.75)
-
+    %     plot(E(i)/1e9, kPoints{i,1},'ko','MarkerSize',5,'LineWidth',.75)
+    
 end
 %     plot( kAvg,E/1e9,'ko','MarkerSize',5,'LineWidth',.75)
 
-fitPlot=plot(Lkfit);
+fitPlot=plot(Lkfit,'b');
 % fitPlot=plot(Ekfit);
 legend off
-set(fitPlot,'LineWidth',2)
+set(fitPlot,'LineWidth',1.25)
 
 ylimits=ylim;
 ylim('auto')%[0 ylimits(2)])
@@ -155,14 +176,16 @@ ylim('auto')%[0 ylimits(2)])
 xlimits=xlim;
 xlim([4 xlimits(2)])
 
-set(gca,'FontSize',12)
+set(gca,'FontSize',10)
 % xlabel('Free Length of Hair (mm)')
 % ylabel('Stiffness of Hair (N/m)')
 set(gca,'Box','off','Units','inches',...
-'ActivePositionProperty','Position',...
-'Position',plotSize)
+    'ActivePositionProperty','Position',...
+    'Position',plotSize,'FontSize',10,'FontName','Arial')
 [newX,newY]=MiriamAxes(gca,'xy');
-% set(newX,'XScale','log')
+set(newX,'FontSize',10,'FontName','Arial')
+set(newY,'FontSize',10,'FontName','Arial')
+
 set(get(newX,'XLabel'),'Visible','off')
 set(get(newY,'YLabel'),'Visible','off')
 
@@ -176,12 +199,24 @@ for i=1:4
     Ecurve(i)=kAvg(i)*radii(i)^3*(2*A(i)+3*B(i));
 end
 
-%% Save everything
-if strcmp(save,'Yes')
+%% Save plots
+if strcmp(savePlots,'Yes')
     saveas(figure(1),'/Users/adam/Documents/MATLAB/HairSwipe/Paper/DeflectionTimePlot','pdf')
     saveas(figure(1),'/Users/adam/Documents/MATLAB/HairSwipe/Paper/DeflectionTimePlot.fig')
     saveas(figure(2),'/Users/adam/Documents/MATLAB/HairSwipe/Paper/ForceDistancePlot','pdf')
     saveas(figure(2),'/Users/adam/Documents/MATLAB/HairSwipe/Paper/ForceDistancePlot.fig')
     saveas(figure(3),'/Users/adam/Documents/MATLAB/HairSwipe/Paper/StiffnessVLengthPlot','pdf')
     saveas(figure(3),'/Users/adam/Documents/MATLAB/HairSwipe/Paper/StiffnessVLengthPlot.fig')
+end
+
+
+%% Save raw data
+if strcmp(compileData,'Yes')
+    %     save('/Users/adam/Documents/MATLAB/HairSwipe/Paper/SubmittedData/ClassicalTouchAssayData.mat')
+    if exist('TouchAssayForcesByVolunteer','var')
+        save('/Users/adam/Documents/MATLAB/HairSwipe/Paper/SubmittedData/ClassicalTouchAssayData.mat','TouchAssayForcesByVolunteer','HairMechanicsDataByHair')
+    else
+        save('/Users/adam/Documents/MATLAB/HairSwipe/Paper/SubmittedData/ClassicalTouchAssayData.mat','HairMechanicsDataByHair')
+        print('Save the touch force data too!')
+    end
 end
