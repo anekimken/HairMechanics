@@ -8,7 +8,8 @@ close all
 fileID=fopen([PathName FileName]);
 data=textscan(fileID,'%f %f %f','HeaderLines',9);
 
-[sensitivity]=SensitivityCalc('AN-HS9A',965,10.05,.0589); % in um/V
+% [sensitivity]=SensitivityCalc('AN-HS9A',965,10.05,.0589); % in um/V
+sensitivity=28.0^-1/5000;
 
 figure(1)
 plot(data{1}./1e6,'DisplayName','Setpoint (m)')
@@ -16,7 +17,7 @@ hold all
 plot(data{2}./1e6,'DisplayName','Position (m)')
 plot(data{3}.*sensitivity,'DisplayName','Cantilever Deflection (m)')
 
-CantileverStiffness=1.003;
+CantileverStiffness=.35;
 
 CantileverForce=data{3}.*sensitivity*CantileverStiffness;
 

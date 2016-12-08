@@ -109,7 +109,7 @@ for i=1:size(daterTots,1)
         end
     end
     kPoints{i}=stiffness;
-    kAvg(i)=mean(kPoints{i});
+    kAvg(i)=mean(kPoints{i})
     errorBarSize(i)=std(kPoints{i})/sqrt(size(kPoints{i},1));
     r(i)=base(i)/tip(i);
     Ia(i)=pi*(tip(i))^4/64;
