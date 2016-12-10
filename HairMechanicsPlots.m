@@ -4,7 +4,7 @@
 
 close all
 clear all
-savePlots='Yes' %#ok<NOPTS>
+savePlots='No' %#ok<NOPTS>
 compileData='No' %#ok<NOPTS>
 
 plotSize=[0.35 0.25 2.35 3/1.6-.5];
